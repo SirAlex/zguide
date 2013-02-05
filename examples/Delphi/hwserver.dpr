@@ -19,7 +19,6 @@ var
   request,
   reply: zmq_msg_t;
   s: Utf8String;
-
 begin
   context := zmq_init(1);
 
