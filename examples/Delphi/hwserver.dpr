@@ -18,6 +18,7 @@ var
   responder: Pointer;
   request,
   reply: zmq_msg_t;
+  s: Utf8String;
 
 begin
   context := zmq_init(1);
@@ -44,7 +45,8 @@ begin
     //  Send reply back to client
     zmq_msg_init( reply );
     zmq_msg_init_size( reply, 5 );
-    Move( 'World', zmq_msg_data( reply )^, 5 );
+    s := 'World';
+    Move( s[1], zmq_msg_data( reply )^, 5 );
     {$ifdef zmq3}
     zmq_sendmsg( responder, reply, 0 );
     {$else}

@@ -1,6 +1,8 @@
 examples.*
 *.local
 *.bdsproj
+*.dproj
+*.res
 *.cfg
 *.identcache
 *.exe
