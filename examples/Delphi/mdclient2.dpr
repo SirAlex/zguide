@@ -1,16 +1,16 @@
-program mdclient;
+program mdclient2;
 //
-//  Majordomo Protocol client example
+//  Majordomo Protocol client example - asynchronous
 //  Uses the mdcli API to hide all MDP aspects
-//  @author Varga Balázs <bb.varga@gmail.com>
 //
-{$APPTYPE CONSOLE}
-
 //  Lets us build this source without creating a library
+//  @author Varga Balázs <bb.varga@gmail.com>
+
+{$APPTYPE CONSOLE}
 
 uses
     SysUtils
-  , mdcliapi
+  , mdcliapi2
   , zmqapi
   , zhelpers
   ;
@@ -25,20 +25,22 @@ begin
   verbose := ( ParamCount > 0 ) and ( ParamStr( 1 ) = '-v' );
 
   session := TMajorDomoClient.Create( 'tcp://localhost:5555', verbose );
+
   count := 10000;
-  i := 0;
-  while ( i < count ) do
+  for i := 1 to count do
   begin
     request := TZMQMsg.Create;
     request.pushstr( 'Hello world' );
-    reply := session.send( 'echo', request );
-    if reply <> nil then
-      reply.Free
-    else
-      break; //  Interrupt or failure
-    inc( i );
+    session.send( 'echo', request );
   end;
-  zNote( Format( '%d requests/replies processed', [count] ) );
+
+  for i := 1 to count do
+  begin
+    reply := session.recv;
+    reply.Free;
+  end;
+
+  zNote( Format( '%d replies received', [count] ) );
   session.Free;
 end.
 

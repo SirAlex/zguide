@@ -206,7 +206,7 @@ begin
 
   //  If we got a MMI service request, process that internally
   if ( service_frame.size >= 4 ) and
-     ( AnsiStartsStr( 'mmi.', sender.asUtf8String ) ) then
+     ( AnsiStartsStr( 'mmi.', service_frame.asUtf8String ) ) then
   begin
     return_code := '';
     if service_frame.asUtf8String = 'mmi.service' then

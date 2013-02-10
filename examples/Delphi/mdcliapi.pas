@@ -21,13 +21,13 @@ type
     ctx: TZMQContext;   //  Our context
     fBroker: AnsiString;
     fClient: TZMQSocket; //  Socket to broker
-    fVerbose: Integer;   //  Print activity to stdout
+    fVerbose: Boolean;   //  Print activity to stdout
     fTimeout: Integer;   //  Request timeout
     fRetries: Integer;   //  Request retries
     poller: TZMQPoller;
     procedure ConnectToBroker;
   public
-    constructor Create( lbroker: AnsiString; lverbose: Integer );
+    constructor Create( lbroker: AnsiString; lverbose: Boolean );
     destructor Destroy; override;
 
     //  Here is the send method. It sends a request to the broker and gets a
@@ -52,7 +52,7 @@ uses
 //  Here we have the constructor and destructor for our mdcli class:
 //  ---------------------------------------------------------------------
 //  Constructor
-constructor TMajorDomoClient.Create( lbroker: AnsiString; lverbose: Integer );
+constructor TMajorDomoClient.Create( lbroker: AnsiString; lverbose: Boolean );
 begin
   assert( lbroker <> '' );
   ctx := TZMQContext.Create;
@@ -84,7 +84,7 @@ begin
   fClient.Linger := 0;
   fClient.connect( fBroker );
   poller.Register( fClient, [pePollIn] );
-  if fVerbose > 0 then
+  if fVerbose then
     zNote( Format( 'I: connecting to broker at %s...', [fBroker] ) );
 end;
 
@@ -102,7 +102,7 @@ begin
 
   request.pushstr( service );
   request.pushstr( MDPC_CLIENT );
-  if fVerbose > 0 then
+  if fVerbose then
   begin
     zNote( Format( 'I: send request to "%s" service:', [service] ) );
     zNote( request.dump );
@@ -124,7 +124,7 @@ begin
     if pePollIn in poller.PollItem[0].revents then
     begin
       fClient.recv( msg );
-      if fVerbose > 0 then
+      if fVerbose then
       begin
         zNote( 'I: received reply:' );
         zNote( msg.dump );
@@ -149,12 +149,12 @@ begin
       dec( retries_left );
       if retries_left > 0 then
       begin
-        if fVerbose > 0 then
+        if fVerbose then
           zNote( 'W: no reply, reconnecting...' );
         ConnectToBroker;
       end else
       begin
-        if fVerbose > 0 then
+        if fVerbose then
           zNote( 'W: permanent error, abandoning' );
         break; //  Give up
       end;
