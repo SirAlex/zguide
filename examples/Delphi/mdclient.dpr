@@ -38,7 +38,7 @@ begin
       break; //  Interrupt or failure
     inc( i );
   end;
-  zNote( Format( '%d requests/replies processed', [count] ) );
+  zNote( Format( '%d requests/replies processed', [i] ) );
   session.Free;
 end.
 

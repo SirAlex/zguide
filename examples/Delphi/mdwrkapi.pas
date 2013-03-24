@@ -41,7 +41,6 @@ type
     expect_reply: Integer;           //  Zero only at start
     reply_to: TZMQFrame;         //  Return identity, if any
 
-    poller: TZMQPoller;
     function getTerminated: Boolean;
     //  We have two utility functions; to send a message to the broker and
     //  to (re-)connect to the broker:
@@ -91,13 +90,11 @@ begin
   heartbeat := 2500;     //  msecs
   reconnect := 2500;     //  msecs
 
-  poller := TZMQPoller.Create( true );
   ConnectToBroker;
 end;
 
 destructor TMajorDomoWorker.Destroy;
 begin
-  poller.Free;
   ctx.Free;
   inherited;
 end;
@@ -133,14 +130,10 @@ end;
 procedure TMajorDomoWorker.ConnectToBroker;
 begin
   if fWorker <> nil then
-  begin
-    poller.Deregister( fWorker, [pePollIn] );
     fWorker.Free;
-  end;
   fWorker := ctx.Socket( stDealer );
   fWorker.Linger := 0;
   fWorker.connect( fBroker );
-  poller.Register( fWorker, [pePollIn] );
 
   if Verbose then
     zNote( Format( 'I: connecting to broker at %s...', [ Broker ] ) );
@@ -160,6 +153,7 @@ var
   empty,
   header,
   command: TZMQFrame;
+  pia: TZMQPollItem;
 begin
   result :=nil;
   //  Send reply, if any, to broker and wait for next request.
@@ -180,8 +174,10 @@ begin
 
   while not ctx.Terminated do
   try
-    poller.poll( Heartbeat );
-    if pePollIn in poller.PollItem[0].revents then
+    pia.socket := fWorker;
+    pia.events := [ pePollIn ];
+    ZMQPoll( pia, 1, HeartBeat );
+    if pePollIn in pia.revents then
     begin
       msg := nil;
       fWorker.recv( msg );
